@@ -15,6 +15,7 @@ vbar.config(command=canvas.yview)
 canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
 class mindNode:
+
     def __init__(self, x, y, height, width, color, textColor, text):
         self.x = x
         self.y = y
@@ -26,10 +27,25 @@ class mindNode:
         self.children = list[mindNode]
 
 root = mindNode(0,0,200,100,"red","white","I am root")
+selected = root
 
 canvas.create_rectangle(root.x,root.y,root.x+root.width,root.y+root.height,fill=root.color)
 canvas.create_text(root.x+(root.width/2),root.y+(root.height/2),
 font=("Arial 15"), fill=root.textColor, text=root.text, width=root.width)
+
+def select(event, parentNode:mindNode):
+    global selected
+    if event.num == 1:
+        if((parentNode.x <= event.x and event.x <= parentNode.x+parentNode.width)
+        and (parentNode.y <= event.y and event.y <= parentNode.y+parentNode.height)):
+            selected = parentNode
+            return
+        
+        for i in parentNode.children:
+            if parentNode.children.count != 0:
+                select(parentNode.children[i])
+
+canvas.bind("<Button-1>", select(event, root))
 
 canvas.pack(expand=True, fill=BOTH)
 mainWindow.mainloop()
