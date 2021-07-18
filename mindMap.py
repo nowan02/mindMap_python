@@ -15,7 +15,6 @@ vbar.config(command=canvas.yview)
 canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
 class mindNode:
-
     def __init__(self, x, y, height, width, color, textColor, text):
         self.x = x
         self.y = y
@@ -33,19 +32,34 @@ canvas.create_rectangle(root.x,root.y,root.x+root.width,root.y+root.height,fill=
 canvas.create_text(root.x+(root.width/2),root.y+(root.height/2),
 font=("Arial 15"), fill=root.textColor, text=root.text, width=root.width)
 
-def select(event, parentNode:mindNode):
-    global selected
-    if event.num == 1:
-        if((parentNode.x <= event.x and event.x <= parentNode.x+parentNode.width)
-        and (parentNode.y <= event.y and event.y <= parentNode.y+parentNode.height)):
-            selected = parentNode
-            return
-        
-        for i in parentNode.children:
-            if parentNode.children.count != 0:
-                select(parentNode.children[i])
+def collisionDetection(event:Event, node:mindNode):
+    if((node.x <= event.x and event.x <= node.x+node.width)
+    and (node.y <= event.y and event.y <= node.y+node.height)):
+        return True
+    return False
 
-canvas.bind("<Button-1>", select(event, root))
+def search(event:Event, parentNode:mindNode):
+    global selected
+    if(collisionDetection(event, parentNode) == True):
+        selected = parentNode
+        print("katt")
+        return
+    else:
+        if(parentNode.children.count != 0):
+            for i in parentNode.children:
+                search(event, parentNode.children[i])
+
+def select(event):
+    global root
+    if(event.num == 1):
+        search(event, root)
+             
+def create(event):
+    pass
+    
+
+canvas.bind("<Button>", select)
+canvas.bind("<Shift-Button>", create)
 
 canvas.pack(expand=True, fill=BOTH)
 mainWindow.mainloop()
