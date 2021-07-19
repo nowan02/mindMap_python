@@ -18,15 +18,7 @@ canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
 
 class mindNode:
-    x:int
-    y:int
-    height:int
-    width:int
-    color:str
-    textColor:str
-    text:str
-    children:any
-    def __init__(self, x, y, height=0, width=0, color="", textColor="", text=""):
+    def __init__(self, x, y, height, width, color, textColor, text):
         self.x = x
         self.y = y
         self.height = height
@@ -56,25 +48,28 @@ def search(event: Event, parentNode: mindNode):
         print("katt")
         return
 
-    for i in parentNode.children:
-        search(event, parentNode.children[i])
+    for n in parentNode.children:
+        search(event, n)
 
 def select(event: Event):
     global root
     if(event.num == 1):
         search(event, root)
 
-def reDraw(node:mindNode):
+def reDraw(parentNode:mindNode):
     canvas.delete("all")
-    canvas.create_rectangle(node.x, node.y, node.x+node.width,
-                    node.y+node.height, fill=node.color)
-    canvas.create_text(node.x+(node.width/2), node.y+(node.height/2),
-                font=("Arial 15"), fill=node.textColor, text=node.text, width=node.width)
+    canvas.create_rectangle(parentNode.x, parentNode.y, parentNode.x+parentNode.width,
+                    parentNode.y+parentNode.height, fill=parentNode.color)
+    canvas.create_text(parentNode.x+(parentNode.width/2), parentNode.y+(parentNode.height/2),
+                font=("Arial 15"), fill=parentNode.textColor, text=parentNode.text, width=parentNode.width)
     
-    for n in node.children:
+    for n in parentNode.children:
         reDraw(n)      
 
-def create(event:Event):
+def create(event):
+    posX = event.x
+    posY = event.y
+
     editor = Toplevel(mainWindow)
     editor.title("Node editor")
     editor.geometry("300x300")
@@ -109,9 +104,14 @@ def create(event:Event):
     tisTextEntry = Entry(editor)
     tisTextEntry.pack()
 
-    newNode = mindNode(event.x, event.y)
+    newNode = mindNode(posX,posY,0,0,"","","")
 
     def confirm():
+        newNode.width = int(tisWidthEntry.get())
+        newNode.height = int(tisHeightEntry.get())
+        newNode.color = tisColorEntry.get()
+        newNode.textColor = tisTextColorEntry.get()
+        newNode.text = tisTextEntry.get()
         
         selected.children.append(newNode)
         reDraw(root)
