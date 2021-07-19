@@ -26,7 +26,7 @@ class mindNode:
         self.color = color
         self.textColor = textColor
         self.text = text
-        self.children = [mindNode]
+        self.children = []
 
 root = mindNode(0, 0, 200, 100, "red", "white", "I am root")
 selected = root
@@ -57,7 +57,6 @@ def select(event: Event):
         search(event, root)
 
 def reDraw(parentNode:mindNode):
-    canvas.delete("all")
     canvas.create_rectangle(parentNode.x, parentNode.y, parentNode.x+parentNode.width,
                     parentNode.y+parentNode.height, fill=parentNode.color)
     canvas.create_text(parentNode.x+(parentNode.width/2), parentNode.y+(parentNode.height/2),
@@ -114,6 +113,7 @@ def create(event):
         newNode.text = tisTextEntry.get()
         
         selected.children.append(newNode)
+        canvas.delete("all")
         reDraw(root)
 
     confirmButton = Button(editor, text="Confirm", command=confirm)
