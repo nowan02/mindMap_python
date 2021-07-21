@@ -53,7 +53,7 @@ class mindNode:
             n.delete()
 
         def recurse(node:mindNode):
-            if(node.deleted == True):
+            if(node.deleted):
                 node.parent.children.remove(self)
             for n in self.children:
                 recurse(n)
