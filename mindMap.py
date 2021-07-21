@@ -16,59 +16,43 @@ hbar.config(command=canvas.xview)
 vbar.config(command=canvas.yview)
 canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
-
 class mindNode:
-    def __init__(self, x, y, height, width, color, textColor, text):
+    def __init__(self, x, y, node, text):
         self.x = x
         self.y = y
-        self.height = height
-        self.width = width
-        self.color = color
-        self.textColor = textColor
-        self.text = text
+        self.nodeId = node
+        self.textId = text
         self.children = []
 
-root = mindNode(0, 0, 200, 100, "red", "white", "I am root")
-selected = root
-
-canvas.create_rectangle(root.x, root.y, root.x+root.width,
-                        root.y+root.height, fill=root.color)
-canvas.create_text(root.x+(root.width/2), root.y+(root.height/2),
-                   font=("Arial 15"), fill=root.textColor, text=root.text, width=root.width)
-
-
-def collisionDetection(event:Event, node: mindNode):
-    return(node.x <= event.x and event.x <= node.x+node.width) and (node.y <= event.y and event.y <= node.y+node.height)
-
-
-def search(event: Event, parentNode: mindNode):
+def search(parentNode, searchId):
     global selected
-    if(collisionDetection(event, parentNode)):
+    if(parentNode.nodeId == searchId):
         selected = parentNode
-        print("katt")
         return
+    else:
+        for n in parentNode.children:
+            search(n, searchId)
 
-    for n in parentNode.children:
-        search(event, n)
+def nodeSelect(event):
+    nodeId = event.widget.find_withtag('current')[0]
+    print("mindNode with id:", nodeId, "clicked")
+    search(rootNode, nodeId)
+    print(selected.nodeId)
 
-def select(event: Event):
-    global root
-    if(event.num == 1):
-        search(event, root)
+def addNode(x, y, width, height, text, color, textColor):
+    rectangle = canvas.create_rectangle(x, y, x+width, y+height, fill=color)
+    canvas.tag_bind(rectangle,"<Button>",nodeSelect)
+    text = canvas.create_text(x+width/2, y+width/2, font=("Arial",15), text=text, fill=textColor, width=width)
+    newNode = mindNode(x, y, rectangle,text)
+    selected.children.append(newNode)
 
-def reDraw(parentNode:mindNode):
-    canvas.create_rectangle(parentNode.x, parentNode.y, parentNode.x+parentNode.width,
-                    parentNode.y+parentNode.height, fill=parentNode.color)
-    canvas.create_text(parentNode.x+(parentNode.width/2), parentNode.y+(parentNode.height/2),
-                font=("Arial 15"), fill=parentNode.textColor, text=parentNode.text, width=parentNode.width)
-    
-    for n in parentNode.children:
-        reDraw(n)      
+root = canvas.create_rectangle(0,0,200,100,fill="red")
+rootText = canvas.create_text(100,50,font=("Arial",15),fill="white",width=100,text="I am root")
+rootNode = mindNode(0, 0, root, rootText)
+selected = rootNode
+canvas.tag_bind(root,"<Button>",nodeSelect) 
 
-def create(event):
-    posX = event.x
-    posY = event.y
-
+def clickWrapper(event):
     editor = Toplevel(mainWindow)
     editor.title("Node editor")
     editor.geometry("300x300")
@@ -103,25 +87,17 @@ def create(event):
     tisTextEntry = Entry(editor)
     tisTextEntry.pack()
 
-    newNode = mindNode(posX,posY,0,0,"","","")
-
     def confirm():
-        newNode.width = int(tisWidthEntry.get())
-        newNode.height = int(tisHeightEntry.get())
-        newNode.color = tisColorEntry.get()
-        newNode.textColor = tisTextColorEntry.get()
-        newNode.text = tisTextEntry.get()
-        
-        selected.children.append(newNode)
-        canvas.delete("all")
-        reDraw(root)
+        if(tisWidthEntry.get() != "" and tisHeightEntry.get() != "" and tisColorEntry.get() != "" and tisTextColorEntry.get() != "" and tisTextEntry.get() != ""):
+            addNode(event.x, event.y, int(tisWidthEntry.get()), int(tisHeightEntry.get()), tisTextEntry.get(), tisColorEntry.get(), tisTextColorEntry.get())
+            editor.destroy()
+        else:
+            print("No entry")
 
     confirmButton = Button(editor, text="Confirm", command=confirm)
     confirmButton.pack()
 
-
-canvas.bind("<Button>", select)
-canvas.bind("<Shift-Button>", create)
+canvas.bind("<Shift-Button>", clickWrapper)
 
 canvas.pack(expand=True, fill=BOTH)
 mainWindow.mainloop()
