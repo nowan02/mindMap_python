@@ -40,6 +40,10 @@ class mindNode:
         if(len(text) >= 200):
             height += 20 
 
+        self.text = text
+        self.textColor = textColor
+        self.rectColor = rectColor
+        self.parent = parent
         self.deleted = False
         self.nodeId = canvas.create_rectangle(x, y, x+width, y+height, fill=rectColor)
         self.textId = canvas.create_text(x+width/2, y+height/2, font=("Arial",15), text=text, fill=textColor, width=width-10)
@@ -52,19 +56,31 @@ class mindNode:
         for n in self.children:
             n.delete()
 
-        def recurse(node:mindNode):
-            if(node.deleted):
-                node.parent.children.remove(self)
-            for n in self.children:
-                recurse(n)
+    def deleteForGood(self):
+        if(self.deleted == True):
+            self.parent.children.remove(self)
+        for n in self.children:
+            n.deleteForGood()
 
-        recurse(self)
+    def reDraw(self):
+        for n in self.children:
+            x,y,w,h = canvas.coords(n.nodeId)
+            n.nodeId = canvas.create_rectangle(x, y, w, h, fill = self.rectColor)
+            n.textId = canvas.create_rectangle(x+w/2,y+h/2, font=("Arial",15), text=self.text, fill=self.textColor, width=w-10)
 
-root = mindNode(0, 0, "I am root", "white", "red", 1)
-print(root.nodeId)
-selected = root
+def create(parameter):
+    newNode = mindNode(parameter[0],parameter[1],parameter[2],parameter[3],parameter[4], selected)
+    selected.children.append(newNode)
 
-def editorWindow(x,y):
+def edit(parameter):
+    _,_,width,height = canvas.coords(selected.nodeId)
+    w = width - parameter[0]
+    h = height - parameter[1]
+    selected.delete()
+    selected.nodeId = canvas.create_rectangle(parameter[0], parameter[1], width, height, fill = parameter[4])
+    selected.textId = canvas.create_text(parameter[0]+w/2,parameter[1]+h/2, font=("Arial",15), text=parameter[2], fill=parameter[3], width=w-10)
+
+def editorWindow(x,y,callback):
     editor = Toplevel(mainWindow)
     editor.title("Node editor")
     editor.geometry("300x300")
@@ -87,20 +103,26 @@ def editorWindow(x,y):
     tisTextEntry = Entry(editor)
     tisTextEntry.pack()
 
-    def confirm():
-        if(tisColorEntry.get() != "" and tisTextColorEntry.get() != "" and tisTextEntry.get() != ""):
-            selected.children.append(mindNode(x, y, tisTextEntry.get(), tisTextColorEntry.get(), tisColorEntry.get(), selected))
-            editor.destroy()
-        else:
-            print("No entry")
+    def editorCallback():
+        param = [x, y, tisTextEntry.get(), tisTextColorEntry.get(), tisColorEntry.get()]
+        callback(param)
 
-    confirmButton = Button(editor, text="Confirm", command=confirm)
+    confirmButton = Button(editor,text="Confirm",command=editorCallback)
     confirmButton.pack()
 
-def creationWrapper(event):
-    editorWindow(event.x,event.y)
+root = mindNode(0, 0, "I am root", "white", "red", 1)
+print(root.nodeId)
+selected = root
 
-canvas.bind("<Shift-Button>", creationWrapper)
+def createWrapper(event):
+    editorWindow(event.x,event.y,create)
+
+def editWrapper(event):
+    x,y,_,_ = canvas.coords(selected.nodeId)
+    editorWindow(x,y,edit)
+
+canvas.bind("<Shift-Button>", createWrapper)
+canvas.bind("<Control-Button>", editWrapper)
 
 canvas.pack()
 mainWindow.mainloop()
