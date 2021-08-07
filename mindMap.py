@@ -54,16 +54,27 @@ class mindNode:
             parX, parY, parW, parH = canvas.coords(self.parent.nodeId)
             selfX, selfY, selfW, selfH = canvas.coords(self.nodeId)
 
-            if(parX < selfX): # parent to the LEFT
-                lineX = selfX
-                lineW = parW
-            else:             # parent to the RIGHT
-                lineX = selfW
-                lineW = parX
             lineY = selfY + ((selfH - selfY) / 2)
             lineH = parY + ((parH - parY) / 2)
 
+            if(parX < selfX): # parent to the LEFT
+                lineX = selfX
+                lineW = parW
+                if(selfX < parW): # if node X value is between parent X and width
+                    lineX = selfX + ((selfW - selfX) / 2)
+                    lineW = parX + ((parW - parX) / 2)
+                    if(parY < selfY): # parent is OVER
+                        lineY = selfY
+                        lineH = parH
+                    else:   # parent is UNDER
+                        lineY = parY
+                        lineH = selfH
+            else:             # parent to the RIGHT
+                lineX = selfW
+                lineW = parX
+            
             self.conLine = canvas.create_line(lineX, lineY, lineW, lineH)
+
 
 
     def delete(self):
