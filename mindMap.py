@@ -49,6 +49,22 @@ class mindNode:
         self.textId = canvas.create_text(x+width/2, y+height/2, font=("Arial",15), text=text, fill=textColor, width=width-10)
         canvas.tag_bind(self.nodeId,"<Button>",nodeSelect)
         self.children = []
+        
+        if(self.parent != 1 or self.parent != self.nodeId):
+            parX, parY, parW, parH = canvas.coords(self.parent.nodeId)
+            selfX, selfY, selfW, selfH = canvas.coords(self.nodeId)
+
+            if(parX < selfX): # parent to the LEFT
+                lineX = selfX
+                lineW = parW
+            else:             # parent to the RIGHT
+                lineX = selfW
+                lineW = parX
+            lineY = selfY + ((selfH - selfY) / 2)
+            lineH = parY + ((parH - parY) / 2)
+
+            self.conLine = canvas.create_line(lineX, lineY, lineW, lineH)
+
 
     def delete(self):
         canvas.delete(self.textId, self.nodeId)
