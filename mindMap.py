@@ -96,7 +96,11 @@ class mindNode:
             n.textId = canvas.create_rectangle(x+w/2,y+h/2, font=("Arial",15), text=self.text, fill=self.textColor, width=w-10)
 
 def create(parameter):
-    newNode = mindNode(parameter[0],parameter[1],parameter[2],parameter[3],parameter[4], selected)
+    try:
+        newNode = mindNode(parameter[0],parameter[1],parameter[2],parameter[3],parameter[4], selected)
+    except:
+        messagebox.showerror("Color code error", f'An invalid color value was used, substituting with white and black')
+        newNode = mindNode(parameter[0],parameter[1],parameter[2],"black","white", selected)
     selected.children.append(newNode)
 
 def edit(parameter):
@@ -104,8 +108,13 @@ def edit(parameter):
     w = width - parameter[0]
     h = height - parameter[1]
     selected.delete()
-    selected.nodeId = canvas.create_rectangle(parameter[0], parameter[1], width, height, fill = parameter[4])
-    selected.textId = canvas.create_text(parameter[0]+w/2,parameter[1]+h/2, font=("Arial",15), text=parameter[2], fill=parameter[3], width=w-10)
+    try:
+        selected.nodeId = canvas.create_rectangle(parameter[0], parameter[1], width, height, fill = parameter[4])
+        selected.textId = canvas.create_text(parameter[0]+w/2,parameter[1]+h/2, font=("Arial",15), text=parameter[2], fill=parameter[3], width=w-10)
+    except:
+        messagebox.showerror("Color code error", f'An invalid color value was used, substituting with white and black')
+        selected.nodeId = canvas.create_rectangle(parameter[0], parameter[1], width, height, fill = "white")
+        selected.textId = canvas.create_text(parameter[0]+w/2,parameter[1]+h/2, font=("Arial",15), text=parameter[2], fill="black", width=w-10)
 
 def editorWindow(x,y,callback):
     editor = Toplevel(mainWindow)
@@ -170,6 +179,7 @@ def save():
 def load():
     saveFile = open("save.txt", "r")
     global selected
+    linenum = 1
     while(True):
         line = saveFile.readline()
         if(not line):
@@ -183,12 +193,18 @@ def load():
             param[0] = int(param[0])
             param[1] = int(param[1])
         except ValueError:
-            messagebox.showerror("Coordinate error", "An invalid value for X or Y was found in the save file, please check save.txt for possible errors")
+            messagebox.showerror('Coordinate error', f'An invalid value for X or Y was found in the save file on line {linenum}, please check save.txt for possible errors')
             break
 
-        node = mindNode(param[0],param[1],param[2],param[3],param[4],selected)
-        node.parent.children.append(node)
+        try:
+            node = mindNode(param[0],param[1],param[2],param[3],param[4],selected)
+            node.parent.children.append(node)
+        except:
+            messagebox.showerror("Color code error", f'An invalid color value was found in the save file on line {linenum}, substituting with white and black')
+            node = mindNode(param[0],param[1],param[2],"black","white",selected)
         selected = node
+
+        linenum+=1
     saveFile.close()
 
 saveButton = Button(canvasFrame,text="Save and Quit",command=save)
