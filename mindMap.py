@@ -1,4 +1,6 @@
 from tkinter import *
+from tkinter import messagebox
+from io import *
 
 mainWindow = Tk()
 mainWindow.title("Mindmap")
@@ -50,7 +52,7 @@ class mindNode:
         canvas.tag_bind(self.nodeId,"<Button>",nodeSelect)
         self.children = []
         
-        if(self.parent != 1 or self.parent != self.nodeId):
+        if(self.parent != 1):
             parX, parY, parW, parH = canvas.coords(self.parent.nodeId)
             selfX, selfY, selfW, selfH = canvas.coords(self.nodeId)
 
@@ -74,8 +76,6 @@ class mindNode:
                 lineW = parX
             
             self.conLine = canvas.create_line(lineX, lineY, lineW, lineH)
-
-
 
     def delete(self):
         canvas.delete(self.textId, self.nodeId)
@@ -151,5 +151,49 @@ def editWrapper(event):
 canvas.bind("<Shift-Button>", createWrapper)
 canvas.bind("<Control-Button>", editWrapper)
 
+def save():
+    saveName = "save.txt"
+    saveFile = open(saveName, "w")
+
+    def recurse(node:mindNode, doc):
+        x,y,_,_ = canvas.coords(node.nodeId)
+        if(x != 0 and y != 0):
+            doc.write(f'{int(x)},{int(y)},{node.text},{node.textColor},{node.rectColor},{node.parent.nodeId}')
+
+        for n in node.children:
+            recurse(n, doc)
+
+    recurse(root, saveFile)
+    saveFile.close()
+    mainWindow.quit()
+
+def load():
+    saveFile = open("save.txt", "r")
+    global selected
+    while(True):
+        line = saveFile.readline()
+        if(not line):
+            break
+        param = line.split(",")
+        print(param)
+        if(param[5] == 1):
+            selected = root
+        
+        try:
+            param[0] = int(param[0])
+            param[1] = int(param[1])
+        except ValueError:
+            messagebox.showerror("Coordinate error", "An invalid value for X or Y was found in the save file, please check save.txt for possible errors")
+            break
+
+        node = mindNode(param[0],param[1],param[2],param[3],param[4],selected)
+        node.parent.children.append(node)
+        selected = node
+    saveFile.close()
+
+saveButton = Button(canvasFrame,text="Save and Quit",command=save)
+saveButton.pack()
+loadButton = Button(canvasFrame, text="Load from text file",comman=load)
+loadButton.pack()
 canvas.pack()
 mainWindow.mainloop()
